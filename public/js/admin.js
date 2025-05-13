@@ -1,123 +1,108 @@
-let lista = JSON.parse(localStorage.getItem('produtos')) || [];  // Carregar produtos do localStorage
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Administração de Produtos | C&C</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Verifique se o caminho está correto -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .card-admin { border-radius: 1rem; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1); }
+    .table thead { background-color: #343a40; color: #fff; }
+    img.thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1"><i class="bi bi-shop-window"></i> Painel C&C</span>
+  </div>
+</nav>
 
-// Seleção dos elementos do DOM
-const adminTable = document.getElementById('adminTable');
-const modalAdmin = new bootstrap.Modal(document.getElementById('modalAdmin'));
-const formAdmin = document.getElementById('formAdmin');
-const sizesContainer = document.getElementById('sizesContainer');
-const saveBtn = document.getElementById('saveBtn');
-const inputFile = document.getElementById('inputImagemFile');
-const btnNovo = document.getElementById('btnNovo');
-const btnAddSize = document.getElementById('btnAddSize');
+<div class="container my-5">
+  <div class="card card-admin p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="m-0"><i class="bi bi-list-ul"></i> Produtos</h2>
+      <button id="btnNovo" class="btn btn-success"><i class="bi bi-plus-lg"></i> Novo Produto</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Imagem</th>
+            <th>Descrição</th>
+            <th>Tamanhos</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="adminTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-// Função para renderizar a tabela de administração
-function renderTable() {
-  adminTable.innerHTML = '';  // Limpar a tabela antes de re-renderizar
-  lista.forEach((produto, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${produto.nome}</td>
-      <td><img src="${produto.imagem}" class="thumb"></td>
-      <td>${produto.descricao}</td>
-      <td>${Object.entries(produto.tamanho).map(([k,v]) => `${k}: R$ ${v.toFixed(2)}`).join('<br>')}</td>
-      <td class="text-center">
-        <button class="btn btn-sm btn-primary me-1" onclick="editProduto(${i})"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-danger" onclick="deleteProduto(${i})"><i class="bi bi-trash"></i></button>
-      </td>`;
-    adminTable.appendChild(tr);  // Adicionar a linha à tabela
-  });
-}
+<!-- Modal Admin -->
+<div class="modal fade" id="modalAdmin" tabindex="-1" aria-labelledby="modalAdminLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content card-admin">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="modalAdminLabel"><i class="bi bi-pencil-square"></i> Gerenciar Produto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formAdmin">
+          <input type="hidden" id="produtoIndex">
+          <input type="hidden" id="imagemPath">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="inputNome" class="form-label">Nome</label>
+              <input type="text" class="form-control" id="inputNome" placeholder="Ex: Feijoada" required>
+            </div>
+            <div class="col-md-6">
+              <label for="inputImagemFile" class="form-label">Imagem</label>
+              <input type="file" class="form-control" id="inputImagemFile" accept="image/*">
+            </div>
+            <div class="col-12">
+              <label for="inputDescricao" class="form-label">Descrição</label>
+              <textarea class="form-control" id="inputDescricao" rows="3" placeholder="Detalhes do produto" required></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Tamanhos e Preços</label>
+              <div id="sizesContainer" class="mb-2"></div>
+              <button type="button" id="btnAddSize" class="btn btn-outline-secondary btn-sm"><i class="bi bi-plus-circle"></i> Adicionar Tamanho</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="saveBtn" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-// Função para resetar o formulário
-function resetForm() {
-  formAdmin.reset();
-  document.getElementById('produtoIndex').value = '';
-  document.getElementById('imagemPath').value = '';
-  sizesContainer.innerHTML = '';
-}
+<footer class="footer text-center mt-5">
+  <p>Siga-nos nas redes sociais:</p>
+  <div class="social-links">
+    <a href="#" target="_blank" class="mx-2">
+      <i class="bi bi-instagram me-2"></i>Instagram
+    </a>
+    <a href="#" target="_blank" class="mx-2">
+      <i class="bi bi-whatsapp mx-2"></i>WhatsApp
+    </a>
+    <a href="#" target="_blank" class="mx-2">
+      <i class="bi bi-geo-alt"></i> Localização
+    </a>
+  </div>
+  <p>© 2025 Feijoada da Dayse. Todos os direitos reservados.</p>
+  <p>Site criado por <strong>C&C</strong>.</p>
+</footer>
 
-// Função para adicionar campos de tamanho e preço
-function addSizeField(k = '', p = '') {
-  const div = document.createElement('div');
-  div.className = 'input-group mb-2';
-  div.innerHTML = `
-    <input type="text" class="form-control" placeholder="Tamanho" value="${k}" required>
-    <input type="number" class="form-control" placeholder="Preço" value="${p}" required>
-    <button class="btn btn-outline-danger" type="button"><i class="bi bi-x-lg"></i></button>
-  `;
-  div.querySelector('button').onclick = () => div.remove();  // Remove o campo
-  sizesContainer.appendChild(div);  // Adiciona ao container
-}
-
-// Ação para abrir o modal e resetar o formulário
-btnNovo.onclick = () => { resetForm(); modalAdmin.show(); };
-
-// Ação para adicionar um novo campo de tamanho
-btnAddSize.onclick = () => addSizeField();
-
-// Função para salvar o produto (criar ou editar)
-saveBtn.onclick = async () => {
-  const idx = document.getElementById('produtoIndex').value;
-  const nome = document.getElementById('inputNome').value;
-  const desc = document.getElementById('inputDescricao').value;
-  const oldPath = document.getElementById('imagemPath').value;
-  const tamanho = {};
-
-  // Coletar todos os tamanhos e preços
-  sizesContainer.querySelectorAll('.input-group').forEach(div => {
-    const [k, p] = div.querySelectorAll('input');
-    tamanho[k.value] = parseFloat(p.value);
-  });
-
-  let imagem = oldPath;
-
-  // Se houver um arquivo de imagem, fazer upload
-  if (inputFile.files.length) {
-    const fd = new FormData();
-    fd.append('file', inputFile.files[0]);
-    try {
-      const res = await fetch('/upload', { method: 'POST', body: fd });
-      const { path } = await res.json();
-      imagem = path;
-    } catch (err) {
-      alert("Erro ao fazer upload da imagem.");
-      return;
-    }
-  }
-
-  const prod = { nome, imagem, descricao: desc, tamanho };
-
-  // Se o índice for vazio, adicionar um novo produto
-  if (idx === '') lista.push(prod);
-  else lista[idx] = prod;  // Caso contrário, editar o produto existente
-
-  localStorage.setItem('produtos', JSON.stringify(lista));  // Salvar no localStorage
-  modalAdmin.hide();
-  renderTable();  // Re-renderizar a tabela
-};
-
-// Função para editar um produto
-function editProduto(i) {
-  const p = lista[i];
-  document.getElementById('produtoIndex').value = i;
-  document.getElementById('inputNome').value = p.nome;
-  document.getElementById('inputDescricao').value = p.descricao;
-  document.getElementById('imagemPath').value = p.imagem;
-  sizesContainer.innerHTML = '';
-  
-  // Preencher os campos de tamanho e preço
-  Object.entries(p.tamanho).forEach(([k, v]) => addSizeField(k, v));
-  modalAdmin.show();
-}
-
-// Função para excluir um produto
-function deleteProduto(i) {
-  if (confirm('Excluir este produto?')) {
-    lista.splice(i, 1);  // Remover o produto da lista
-    localStorage.setItem('produtos', JSON.stringify(lista));  // Atualizar o localStorage
-    renderTable();  // Re-renderizar a tabela
-  }
-}
-
-// Iniciar a renderização da tabela ao carregar a página
-renderTable();
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/admin.js"></script> <!-- Verifique se o caminho do script está correto -->
+</body>
+</html>
