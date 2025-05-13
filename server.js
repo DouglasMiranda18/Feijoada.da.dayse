@@ -5,62 +5,65 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000; // Usar variável de ambiente para o port
 
+// Habilita CORS para permitir requisições de outros domínios
 app.use(cors());
-app.use(express.json());
+
+// Servir arquivos estáticos
 app.use(express.static('public'));
+
+// Rota para imagens de produtos
 app.use('/assets/produtos', express.static(path.join(__dirname, 'public/assets/produtos')));
 
-// Arquivo para salvar os dados
-const produtosPath = path.join(__dirname, 'produtos.json');
-
-// Configurar armazenamento das imagens
+// Configuração de armazenamento do multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/assets/produtos');
+    cb(null, 'public/assets/produtos'); // Armazenar as imagens no diretório correto
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = Date.now() + ext;
+    const ext = path.extname(file.originalname); // Extensão do arquivo
+    const name = Date.now() + ext; // Nome único com timestamp
     cb(null, name);
   }
 });
+
+// Inicializa o upload com o multer
 const upload = multer({ storage });
 
-// Rota para envio de imagens
+// Endpoint para upload de arquivos
 app.post('/upload', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+  }
+
+  // Retorna o caminho da imagem salva
   const filePath = `/assets/produtos/${req.file.filename}`;
   res.json({ path: filePath });
 });
 
-// Rota para adicionar produto
-app.post('/produtos', (req, res) => {
-  const novoProduto = req.body;
-
-  // Carregar produtos existentes
-  let produtos = [];
-  if (fs.existsSync(produtosPath)) {
-    produtos = JSON.parse(fs.readFileSync(produtosPath));
+// Exemplo de dados de produtos armazenados (aqui você pode usar um banco de dados)
+const produtos = [
+  {
+    nome: "Produto Exemplo 1",
+    descricao: "Descrição do produto 1",
+    imagem: "/assets/produtos/exemplo1.jpg",
+    tamanho: { P: 30, M: 40, G: 50 }
+  },
+  {
+    nome: "Produto Exemplo 2",
+    descricao: "Descrição do produto 2",
+    imagem: "/assets/produtos/exemplo2.jpg",
+    tamanho: { P: 20, M: 35, G: 45 }
   }
+];
 
-  produtos.push(novoProduto);
-  fs.writeFileSync(produtosPath, JSON.stringify(produtos, null, 2));
-
-  res.status(201).json({ message: 'Produto salvo com sucesso!' });
-});
-
-// Rota para listar produtos
+// Endpoint para obter a lista de produtos
 app.get('/produtos', (req, res) => {
-  if (fs.existsSync(produtosPath)) {
-    const produtos = JSON.parse(fs.readFileSync(produtosPath));
-    res.json(produtos);
-  } else {
-    res.json([]);
-  }
+  res.json(produtos); // Retorna os dados dos produtos
 });
 
+// Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
