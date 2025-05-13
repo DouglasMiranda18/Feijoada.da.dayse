@@ -34,23 +34,3 @@ app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
 
-
-app.get('/assets/produtos', (req, res) => {
-  // Exemplo de lista de produtos
-  const produtos = [
-    {
-      name: 'Feijoada Completa',
-      description: 'Feijoada com todos os acompanhamentos.',
-      image: '/assets/produtos/feijoada.jpg' // Coloque o caminho da imagem correta
-    },
-    {
-      name: 'Feijoada Light',
-      description: 'Feijoada mais leve, sem carne gordurosa.',
-      image: '/assets/produtos/feijoada-light.jpg'
-    }
-    // Adicione outros produtos conforme necessário
-  ];
-
-  res.json(produtos);
-});
-
