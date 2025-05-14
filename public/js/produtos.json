@@ -1,0 +1,22 @@
+[
+  {
+    "nome": "Feijoada Tradicional",
+    "descricao": "Feijoada completa com arroz, farofa, couve e laranja.",
+    "imagem": "/assets/produtos/feijoada.jpg",
+    "tamanho": {
+      "P": 20,
+      "M": 30,
+      "G": 40
+    }
+  },
+  {
+    "nome": "Feijoada Vegana",
+    "descricao": "Feijoada com ingredientes veganos acompanhada de arroz integral e salada.",
+    "imagem": "/assets/produtos/feijoada_vegana.jpg",
+    "tamanho": {
+      "P": 22,
+      "M": 32,
+      "G": 42
+    }
+  }
+]
