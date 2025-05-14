@@ -5,43 +5,45 @@ const path = require('path');
 const fs = require('fs');
 const produtosPath = path.join(__dirname, 'public/data/produtos.json');
 
-
 const app = express();
-const port = process.env.PORT || 3000; // Usar variável de ambiente para o port
+const port = process.env.PORT || 3000;
 
-// Habilita CORS para permitir requisições de outros domínios
 app.use(cors());
-
-// Servir arquivos estáticos
 app.use(express.static('public'));
-
-// Rota para imagens de produtos
 app.use('/assets/produtos', express.static(path.join(__dirname, 'public/assets/produtos')));
+app.use(express.json()); // <- importante se estiver recebendo JSON no body
 
-// Configuração de armazenamento do multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'public/assets/produtos'); // Armazenar as imagens no diretório correto
+    cb(null, 'public/assets/produtos');
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // Extensão do arquivo
-    const name = Date.now() + ext; // Nome único com timestamp
+    const ext = path.extname(file.originalname);
+    const name = Date.now() + ext;
     cb(null, name);
   }
 });
 
-// Inicializa o upload com o multer
 const upload = multer({ storage });
 
-// Endpoint para upload de arquivos
+function salvarProduto(produto) {
+  let produtos = [];
+
+  if (fs.existsSync(produtosPath)) {
+    produtos = JSON.parse(fs.readFileSync(produtosPath, 'utf-8'));
+  }
+
+  produtos.push(produto);
+
+  fs.writeFileSync(produtosPath, JSON.stringify(produtos, null, 2));
+}
+
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado' });
   }
 
   const filePath = `/assets/produtos/${req.file.filename}`;
-
-  // Esperado no body: nome, descricao, tamanho (em JSON string ex: '{"P":10,"M":20,"G":30}')
   const { nome, descricao, tamanho } = req.body;
 
   if (!nome || !descricao || !tamanho) {
@@ -60,12 +62,6 @@ app.post('/upload', upload.single('file'), (req, res) => {
   res.json({ message: 'Produto salvo com sucesso!', produto });
 });
 
-
-  // Retorna o caminho da imagem salva
-  const filePath = `/assets/produtos/${req.file.filename}`;
-  res.json({ path: filePath });
-});
-
 app.get('/produtos', (req, res) => {
   if (!fs.existsSync(produtosPath)) {
     return res.json([]);
@@ -75,8 +71,6 @@ app.get('/produtos', (req, res) => {
   res.json(produtos);
 });
 
-
-// Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
