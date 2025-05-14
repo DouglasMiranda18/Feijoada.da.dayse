@@ -3,6 +3,8 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const produtosPath = path.join(__dirname, 'public/data/produtos.json');
+
 
 const app = express();
 const port = process.env.PORT || 3000; // Usar variável de ambiente para o port
@@ -37,35 +39,42 @@ app.post('/upload', upload.single('file'), (req, res) => {
     return res.status(400).json({ error: 'Nenhum arquivo enviado' });
   }
 
+  const filePath = `/assets/produtos/${req.file.filename}`;
+
+  // Esperado no body: nome, descricao, tamanho (em JSON string ex: '{"P":10,"M":20,"G":30}')
+  const { nome, descricao, tamanho } = req.body;
+
+  if (!nome || !descricao || !tamanho) {
+    return res.status(400).json({ error: 'Dados do produto incompletos' });
+  }
+
+  const produto = {
+    nome,
+    descricao,
+    imagem: filePath,
+    tamanho: JSON.parse(tamanho)
+  };
+
+  salvarProduto(produto);
+
+  res.json({ message: 'Produto salvo com sucesso!', produto });
+});
+
+
   // Retorna o caminho da imagem salva
   const filePath = `/assets/produtos/${req.file.filename}`;
   res.json({ path: filePath });
 });
 
-// Exemplo de dados de produtos armazenados (aqui você pode usar um banco de dados)
-const produtos = [
-  {
-    nome: "Produto Exemplo 1",
-    descricao: "Descrição do produto 1",
-    imagem: "/assets/produtos/exemplo1.jpg",
-    tamanho: { P: 30, M: 40, G: 50 }
-  },
-  {
-    nome: "Produto Exemplo 2",
-    descricao: "Descrição do produto 2",
-    imagem: "/assets/produtos/exemplo2.jpg",
-    tamanho: { P: 20, M: 35, G: 45 }
-  }
-];
-
-const produtosPath = path.join(__dirname, 'public/data/produtos.json');
-
 app.get('/produtos', (req, res) => {
-  const produtos = fs.existsSync(produtosPath)
-    ? JSON.parse(fs.readFileSync(produtosPath))
-    : [];
+  if (!fs.existsSync(produtosPath)) {
+    return res.json([]);
+  }
+
+  const produtos = JSON.parse(fs.readFileSync(produtosPath, 'utf-8'));
   res.json(produtos);
 });
+
 
 // Inicia o servidor
 app.listen(port, () => {
