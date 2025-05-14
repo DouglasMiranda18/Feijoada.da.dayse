@@ -58,9 +58,13 @@ const produtos = [
   }
 ];
 
-// Endpoint para obter a lista de produtos
+const produtosPath = path.join(__dirname, 'public/data/produtos.json');
+
 app.get('/produtos', (req, res) => {
-  res.json(produtos); // Retorna os dados dos produtos
+  const produtos = fs.existsSync(produtosPath)
+    ? JSON.parse(fs.readFileSync(produtosPath))
+    : [];
+  res.json(produtos);
 });
 
 // Inicia o servidor
